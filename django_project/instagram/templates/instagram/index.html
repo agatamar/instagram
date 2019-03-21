@@ -1,18 +1,27 @@
 {% extends 'instagram/base.html' %}
 
 {% block content %}
-    index.html Page
+
 
         <article class="media content-section">
             <div class="media-body">
                 <div class="article-metadata">
 
-                        Insta details
+
                 </div>
-                <p class="article-content">List</p>
-                 <div>
-                   List content
-                </div>
+                <p class="article-content">Photos:</p>
+                {% if images%}
+                    {% for i in images %}
+                    {{i.title}}
+                     <div>
+
+                         <img src="{{ i.path }}" width="500px"/><p></p>
+
+                    </div>
+                    {% endfor %}
+                {%else%}
+                <p>You have no photos. If you would like to upload some, please go to <a class="nav-item nav-link" href="{% url 'instagram:upload' %}">Add Photo</a></p>
+                {%endif%}
             </div>
         </article>
 

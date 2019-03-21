@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'crispy_forms',
     'instagram',
 
 ]
@@ -124,7 +125,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
-LOGIN_REDIRECT_URL='twitter:index'
+LOGIN_REDIRECT_URL='instagram:index'
 LOGIN_URL = 'login'
 
 CRISPY_TEMPLATE_PACK='bootstrap4'
