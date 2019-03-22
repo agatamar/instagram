@@ -2,6 +2,8 @@ from django.contrib.auth.models import User
 from django.db import models
 
 # Create your models here.
+INSTAGRAM_MAXIMUM_COMMENT_LENGTH=100
+
 class Photo(models.Model):
     title = models.CharField(max_length=50)
     path=models.CharField(max_length=200)
@@ -27,5 +29,14 @@ class Preference(models.Model):
     class Meta:
         unique_together = ("user", "photo", "value")
 
+
+class Comment(models.Model):
+    text = models.CharField(max_length=INSTAGRAM_MAXIMUM_COMMENT_LENGTH)
+    creation_date = models.DateTimeField(auto_now_add=True)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    photo=models.ForeignKey(Photo,on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.text
 
 

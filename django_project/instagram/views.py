@@ -2,8 +2,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import default_storage, FileSystemStorage
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
-from .forms import UploadFileForm,UserRegisterForm
-from .models import Photo, Preference
+from .forms import UploadFileForm,UserRegisterForm,AddCommentForm
+from .models import Photo, Preference,Comment
 
 # Create your views here.
 from django.views import View
@@ -100,8 +100,21 @@ class PhotoDetailView(View):
 
     def get(self, request, pk):
         photo=get_object_or_404(Photo, pk=pk)
+        add_comment = AddCommentForm()
         return render(request, self.template_name,
-                      {'photo': photo})
+                      {'photo': photo,'add_comment':add_comment})
+
+    def post(self, request, pk):
+        form = AddCommentForm(request.POST)
+        photo = Photo.objects.get(pk=pk)
+        if form.is_valid():
+            content = form.cleaned_data.get('content')
+            new_comment = Comment(
+                text=content, author=request.user, photo=photo)
+            new_comment.save()
+            form = AddCommentForm()
+        return render(request, self.template_name,
+                      {'photo': photo, 'add_comment': form})
 
 class PostPreferenceView(View):
     template_name = 'instagram/photo_details.html'

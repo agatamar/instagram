@@ -1,5 +1,5 @@
 {% extends 'instagram/base.html' %}
-
+{% load crispy_forms_tags %}
 {% block content %}
         <article class="media content-section">
             <div class="media-body">
@@ -20,8 +20,26 @@
 
                 </div>
                 <div>
-                    <a href="#" onClick="document.getElementById('likebutton').submit()">Like This Post</a> {{photo.likes}}   |   <a href="#" onClick="document.getElementById('dislikebutton').submit()">Dislike This Post</a> {{photo.dislikes}}
+                    <a href="#" onClick="document.getElementById('likebutton').submit()">Like This Photo</a> {{photo.likes}}   |   <a href="#" onClick="document.getElementById('dislikebutton').submit()">Dislike This Photo</a> {{photo.dislikes}}
 
+                </div>
+
+                <form action="" method="POST">
+                {% csrf_token %}
+                    <small class="text-muted">Add comment:</small>
+                    <small class="text-muted">{{ add_comment|crispy }}</small>
+                    <button class="btn btn-outline-info" type="submit">Add</button>
+                </form>
+
+                <div>
+                {% if photo.comment_set.all %}
+                    <small class="text-muted">Comments: ({{ photo.comment_set.all.count }})</small><br>
+                {% for comment in photo.comment_set.all %}
+                   <small class="text-muted">{{ comment.author.username }}: </small>{{ comment.text }}<br>
+                {% endfor %}
+                {% else %}
+                    <small class="text-muted">Be the first to comment.</small>
+                {% endif %}
                 </div>
 
             </div>
