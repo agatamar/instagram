@@ -28,7 +28,7 @@
                 {% csrf_token %}
                     <small class="text-muted">Add comment:</small>
                     <small class="text-muted">{{ add_comment|crispy }}</small>
-                    <button class="btn btn-outline-info" type="submit">Add</button>
+                    <button class="btn btn-outline-info" name="addbtn" type="submit">Add</button>
                 </form>
 
                 <div>

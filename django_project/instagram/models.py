@@ -24,7 +24,7 @@ class Preference(models.Model):
     date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return str(self.user) + ':' + str(self.photo_title) + ':' + str(self.value)
+        return str(self.user) + ':' + str(self.photo) + ':' + str(self.value)
 
     class Meta:
         unique_together = ("user", "photo", "value")

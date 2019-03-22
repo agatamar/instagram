@@ -54,7 +54,7 @@ class ProfileView(LoginRequiredMixin, View):
         return render(request, self.template_name, {'form': form, 'images': images})
 
 
-class UploadPhotoView(View):
+class UploadPhotoView(LoginRequiredMixin,View):
     template_name = 'instagram/upload_photo.html'
 
     def get(self,request):
@@ -95,7 +95,7 @@ class RegisterView(View):
         return render(request, self.template_name, {'form': form})
 
 
-class PhotoDetailView(View):
+class PhotoDetailView(LoginRequiredMixin,View):
     template_name = 'instagram/photo_details.html'
 
     def get(self, request, pk):
@@ -105,26 +105,40 @@ class PhotoDetailView(View):
                       {'photo': photo,'add_comment':add_comment})
 
     def post(self, request, pk):
-        form = AddCommentForm(request.POST)
+        add_comment = AddCommentForm(request.POST)
         photo = Photo.objects.get(pk=pk)
-        if form.is_valid():
-            content = form.cleaned_data.get('content')
+        if add_comment.is_valid():
+            content = add_comment.cleaned_data.get('content')
             new_comment = Comment(
                 text=content, author=request.user, photo=photo)
             new_comment.save()
-            form = AddCommentForm()
+            add_comment = AddCommentForm()
         return render(request, self.template_name,
-                      {'photo': photo, 'add_comment': form})
+                      {'photo': photo, 'add_comment': add_comment})
 
-class PostPreferenceView(View):
+class PostPreferenceView(LoginRequiredMixin,View):
     template_name = 'instagram/photo_details.html'
     def get(self,request,photo_id,preference_type):
         photo = get_object_or_404(Photo, id=photo_id)
-        ctx = {'photo': photo}
+        add_comment = AddCommentForm()
+        ctx = {'photo': photo,'add_comment': add_comment}
         return render(request, self.template_name, ctx)
 
     def post(self,request,photo_id,preference_type):
         photo=get_object_or_404(Photo,id=photo_id)
+        #add_comment = AddCommentForm()
+
+        # if 'addbtn' in request.POST:
+        #     add_comment = AddCommentForm(request.POST)
+        #     if add_comment.is_valid():
+        #         content = add_comment.cleaned_data.get('content')
+        #         new_comment = Comment(
+        #             text=content, author=request.user, photo=photo)
+        #         new_comment.save()
+        #         add_comment = AddCommentForm()
+        #     ctx={'photo':photo,'add_comment':add_comment}
+        #     return render(request, self.template_name, ctx)
+
 
         try:
             preference=Preference.objects.get(user=request.user, photo=photo)
@@ -133,7 +147,6 @@ class PostPreferenceView(View):
 
             if preference_value != preference_type:
                 preference.delete()
-
                 new_preference = Preference(user=request.user,photo=photo,value=preference_type)
 
                 if preference_type == 1 and preference_value != 1:
@@ -142,14 +155,14 @@ class PostPreferenceView(View):
                 elif preference_type == 2 and preference_value != 2:
                     photo.dislikes += 1
                     photo.likes -= 1
-
                 new_preference.save()
-
                 photo.save()
 
+                #ctx = {'photo': photo, 'add_comment': add_comment}
                 ctx = {'photo': photo}
 
-                return render(request, self.template_name, ctx)
+                # return render(request, self.template_name, ctx)
+                return redirect('instagram:photo-details', pk=photo.pk)
 
             elif preference_value == preference_type:
                 preference.delete()
@@ -160,10 +173,11 @@ class PostPreferenceView(View):
                     photo.dislikes -= 1
 
                 photo.save()
-
+                #ctx = {'photo': photo, 'add_comment': add_comment}
                 ctx = {'photo': photo}
 
-                return render(request, self.template_name, ctx)
+                # return render(request, self.template_name, ctx)
+                return redirect('instagram:photo-details', pk=photo.pk)
 
         except Preference.DoesNotExist:
 
@@ -177,7 +191,9 @@ class PostPreferenceView(View):
 
             new_preference.save()
             photo.save()
+            #ctx = {'photo': photo, 'add_comment': add_comment}
             ctx = {'photo': photo}
-            return render(request, self.template_name, ctx)
+            #return render(request, self.template_name, ctx)
+            return redirect('instagram:photo-details', pk=photo.pk)
 
 
