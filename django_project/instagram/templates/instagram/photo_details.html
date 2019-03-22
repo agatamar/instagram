@@ -1,0 +1,40 @@
+{% extends 'instagram/base.html' %}
+
+{% block content %}
+        <article class="media content-section">
+            <div class="media-body">
+                <div class="article-metadata">
+
+
+                </div>
+                <p class="article-content">Photo details:</p>
+
+                <div>
+                    <p>Title: {{photo.title}}</p>
+                    <p>Author: {{photo.author}}</p>
+                    <p>Creation Date: {{photo.creation_date|date:"F d, Y" }}</p>
+                </div>
+                <div>
+
+                     <img src="{{ photo.path }}" width="500px"/><p></p>
+
+                </div>
+                <div>
+                    <a href="#" onClick="document.getElementById('likebutton').submit()">Like This Post</a> {{photo.likes}}   |   <a href="#" onClick="document.getElementById('dislikebutton').submit()">Dislike This Post</a> {{photo.dislikes}}
+
+                </div>
+
+            </div>
+        </article>
+
+<form id="likebutton" method="POST" action="/photo/{{photo.id}}/preference/1/">
+{% csrf_token %}
+<input type="hidden">
+</form>
+
+<form id="dislikebutton" method="POST" action="/photo/{{photo.id}}/preference/2/">
+{% csrf_token %}
+<input type="hidden">
+</form>
+
+{% endblock content %}

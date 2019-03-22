@@ -1,59 +1,68 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.files.storage import default_storage, FileSystemStorage
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import UploadFileForm,UserRegisterForm
-from .models import Photo
+from .models import Photo, Preference
 
 # Create your views here.
 from django.views import View
 
-
-def handle_uploaded_file(f):
-    with open('media/images/', 'wb+') as destination:
-        for chunk in f.chunks():
-            destination.write(chunk)
-
+# class MainView(View):
+#     template_name = 'instagram/index.html'
+#
+#     def get(self, request):
+#         if request.user.is_authenticated:
+#             images = Photo.objects.filter(author=request.user).order_by('-creation_date')
+#         else:
+#             images = Photo.objects.all().order_by('-creation_date')
+#         return render(request, self.template_name,{'images': images})
 
 class MainView(View):
     template_name = 'instagram/index.html'
 
     def get(self, request):
-        images = Photo.objects.filter(author=request.user)
-        return render(request, self.template_name,{'images': images})
+        images = Photo.objects.all().order_by('-creation_date')
+        return render(request, self.template_name, {'images': images})
 
+class ProfileView(LoginRequiredMixin, View):
+    template_name = 'instagram/profile.html'
+
+    def get(self, request):
+
+        if request.user.is_authenticated:
+            form = UploadFileForm()
+            images = Photo.objects.filter(author=request.user).order_by('-creation_date')
+        else:
+            images = Photo.objects.all().order_by('-creation_date')
+            return render(request, self.template_name, {'images': images})
+        return render(request, self.template_name, {'images': images, 'form': form})
+
+    def post(self, request):
+        form = UploadFileForm(request.POST, request.FILES)
+        images = Photo.objects.filter(author=request.user).order_by('-creation_date')
+        if form.is_valid():
+            myfile = request.FILES['file']
+            fs = FileSystemStorage()
+            filename = fs.save(myfile.name, myfile)
+            uploaded_file_url = fs.url(filename)
+            photo_to_save = Photo(author=request.user, title=form.cleaned_data.get('title'), path=uploaded_file_url)
+            photo_to_save.save(force_insert=True)
+            return render(request, self.template_name, {
+                'uploaded_file_url': uploaded_file_url, 'form': form, 'images': images
+            })
+        return render(request, self.template_name, {'form': form, 'images': images})
 
 
 class UploadPhotoView(View):
     template_name = 'instagram/upload_photo.html'
 
-    #działa!!!
-    # def get(self,request):
-    #     return render(request, self.template_name)
-
-    # def post(self,request):
-    #     form = UploadFileForm(request.POST, request.FILES)
-    #     if form.is_valid():
-    #         handle_uploaded_file(request.FILES['file'])
-    #         return redirect('/')
-
-    # działa!!!
-    # def post(self,request):
-    #     myfile = request.FILES['myfile']
-    #     fs = FileSystemStorage()
-    #     filename = fs.save(myfile.name, myfile)
-    #     uploaded_file_url = fs.url(filename)
-    #     return render(request, self.template_name, {
-    #         'uploaded_file_url': uploaded_file_url
-    #     })
-
     def get(self,request):
         form=UploadFileForm()
-        photos=Photo.objects.filter(author=request.user)
         return render(request, self.template_name,{'form':form})
 
     def post(self,request):
         form=UploadFileForm(request.POST,request.FILES)
-        photos = Photo.objects.filter(author=request.user)
         if form.is_valid():
             myfile=request.FILES['file']
             fs = FileSystemStorage()
@@ -84,5 +93,78 @@ class RegisterView(View):
             return redirect('/')
 
         return render(request, self.template_name, {'form': form})
+
+
+class PhotoDetailView(View):
+    template_name = 'instagram/photo_details.html'
+
+    def get(self, request, pk):
+        photo=get_object_or_404(Photo, pk=pk)
+        return render(request, self.template_name,
+                      {'photo': photo})
+
+class PostPreferenceView(View):
+    template_name = 'instagram/photo_details.html'
+    def get(self,request,photo_id,preference_type):
+        photo = get_object_or_404(Photo, id=photo_id)
+        ctx = {'photo': photo}
+        return render(request, self.template_name, ctx)
+
+    def post(self,request,photo_id,preference_type):
+        photo=get_object_or_404(Photo,id=photo_id)
+
+        try:
+            preference=Preference.objects.get(user=request.user, photo=photo)
+            preference_value=int(preference.value)
+            preference_type=int(preference_type)
+
+            if preference_value != preference_type:
+                preference.delete()
+
+                new_preference = Preference(user=request.user,photo=photo,value=preference_type)
+
+                if preference_type == 1 and preference_value != 1:
+                    photo.likes += 1
+                    photo.dislikes -= 1
+                elif preference_type == 2 and preference_value != 2:
+                    photo.dislikes += 1
+                    photo.likes -= 1
+
+                new_preference.save()
+
+                photo.save()
+
+                ctx = {'photo': photo}
+
+                return render(request, self.template_name, ctx)
+
+            elif preference_value == preference_type:
+                preference.delete()
+
+                if preference_type == 1:
+                    photo.likes -= 1
+                elif preference_type == 2:
+                    photo.dislikes -= 1
+
+                photo.save()
+
+                ctx = {'photo': photo}
+
+                return render(request, self.template_name, ctx)
+
+        except Preference.DoesNotExist:
+
+            new_preference = Preference(user=request.user,photo=photo,value=preference_type)
+            preference_type = int(preference_type)
+
+            if preference_type == 1:
+                photo.likes += 1
+            elif preference_type == 2:
+                photo.dislikes += 1
+
+            new_preference.save()
+            photo.save()
+            ctx = {'photo': photo}
+            return render(request, self.template_name, ctx)
 
 

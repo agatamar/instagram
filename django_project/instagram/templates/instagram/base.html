@@ -27,7 +27,9 @@
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
                     {% if user.is_authenticated %}
+                    <b class="nav-item nav-link">Welcome, {{user.get_username}}</b>
                     <a class="nav-item nav-link" href="{% url 'instagram:upload' %}">Add Photo</a>
+                    <a class="nav-item nav-link" href="{% url 'instagram:profile' %}">My Profile</a>
 
                     <a class="nav-item nav-link" href="{% url 'logout' %}">Logout</a>
                     {% else %}
