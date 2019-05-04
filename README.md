@@ -1,6 +1,7 @@
 # instagram
 
 Technical requirements: Python 3.6, Django 1.11.20, please see requirements.txt
+
 Example screenshot from application: instagram_clone_screenshot.png
 
 Instagram clone project based on Django.
